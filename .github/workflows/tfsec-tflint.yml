@@ -1,7 +1,6 @@
 name: 'Terraform'
 on:
   pull_request:
-   
   push:
     branches:
       - main
@@ -9,40 +8,31 @@ jobs:
   tfsec:
     name: tfsec
     runs-on: ubuntu-latest
-
     steps:
       - name: Clone repo
         uses: actions/checkout@v2
-
       - name: tfsec
         uses: aquasecurity/tfsec-action@v1.0.0
 
   tflint:
     name: tflint
     runs-on: ubuntu-latest
-    
     steps:
       - name: Clone repo
         uses: actions/checkout@v2
-
       - name: Cache plugin dir
-        uses: actions/checkout@v2
+        uses: actions/cache@v2
         with:
           path: ~/.tflint.d/plugins
-          key: ubuntu-latest-tflint-${{ hashFiles('.tflint.hcl')}}
-
-      - uses: terraform-linters/tflint-action@v1
-        name: Setup TFLint
+          key: ubuntu-latest-tflint-${{ hashFiles('.tflint.hcl') }}
+      - name: Setup TFLint
+        uses: terraform-linters/tflint-action@v1
         with:
-          github_token: ${{secrets.GITHUB_TOKEN}}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           tflint_version: latest
-
       - name: Show version
         run: tflint --version
-
       - name: tflint init
         run: tflint --init
-        
       - name: run tflint
         run: tflint -f compact
-        
