@@ -11,11 +11,13 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
-                git 'https://github.com/polagonianil/Jenkins-pipeline-Terraform.git'
-            }
+                git branch: 'main', url: 'https://github.com/polagonianil/Jenkins-pipeline-Terraform.git'
+           }
         }
+
 
         stage('Terraform Init') {
             steps {
