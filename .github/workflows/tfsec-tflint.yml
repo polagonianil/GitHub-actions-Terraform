@@ -32,7 +32,7 @@ jobs:
 
       # Run tflint for Terraform linting
       - name: Run tflint
-        uses: mining-company/tflint-action@v1.5.0
+        uses: terraform-linters/tflint-action@v1.5.0
         with:
           tf_version: '0.14.3'
         env:
@@ -40,7 +40,7 @@ jobs:
 
       # Run tfsec for security scanning
       - name: Run tfsec
-        uses: aquasecurity/tfsec-action@v0.55.0
+        uses: aquasecurity/tfsec-action@latest
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
