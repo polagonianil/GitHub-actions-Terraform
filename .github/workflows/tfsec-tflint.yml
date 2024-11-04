@@ -20,19 +20,24 @@ jobs:
     steps:
       - name: Clone repo
         uses: actions/checkout@v2
+
       - name: Cache plugin dir
         uses: actions/cache@v2
         with:
           path: ~/.tflint.d/plugins
           key: ubuntu-latest-tflint-${{ hashFiles('.tflint.hcl') }}
-      - name: Setup TFLint
-        uses: terraform-linters/tflint-action@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          tflint_version: latest
+
+      - name: Install TFLint
+        run: |
+          curl -L https://github.com/terraform-linters/tflint/releases/latest/download/tflint_linux_amd64.zip -o tflint.zip
+          unzip tflint.zip -d /usr/local/bin
+          rm tflint.zip
+
       - name: Show version
         run: tflint --version
+
       - name: tflint init
         run: tflint --init
+
       - name: run tflint
         run: tflint -f compact
