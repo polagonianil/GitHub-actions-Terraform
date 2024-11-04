@@ -11,18 +11,23 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/polagonianil/Jenkins-pipeline-Terraform.git'
-           }
+            }
         }
 
+        stage('Debug Directory') {
+            steps {
+                bat 'dir'  // This will print the contents of the workspace for verification
+            }
+        }
 
         stage('Terraform Init') {
             steps {
                 script {
-                    bat 'cd Jenkins-pipeline-Terraform && terraform init'
+                    // Adjust the path if necessary based on the 'Debug Directory' output
+                    bat 'terraform init'
                 }
             }
         }
@@ -30,7 +35,7 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 script {
-                    bat "cd Jenkins-pipeline-Terraform && terraform plan -var=\"instance_type=${params.INSTANCE_TYPE}\" -var=\"region=${params.REGION}\" -out=tfplan"
+                    bat "terraform plan -var=\"instance_type=${params.INSTANCE_TYPE}\" -var=\"region=${params.REGION}\" -out=tfplan"
                 }
             }
         }
@@ -39,7 +44,7 @@ pipeline {
             steps {
                 input 'Approve Terraform Apply?'
                 script {
-                    bat "cd Jenkins-pipeline-Terraform && terraform apply -auto-approve tfplan"
+                    bat "terraform apply -auto-approve tfplan"
                 }
             }
         }
