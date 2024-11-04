@@ -7,7 +7,7 @@ resource "aws_instance" "foo" {
   instance_type = var.instance_type
 
   metadata_options {
-    http_tokens = "enabled"
+    http_tokens = "required"
   }
 
   root_block_device {
