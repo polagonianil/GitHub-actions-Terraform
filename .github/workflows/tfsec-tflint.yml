@@ -1,55 +1,48 @@
 name: 'Terraform'
 on:
   pull_request:
-    branches: [ "main" ]  # Runs when a PR targets the main branch
+   
   push:
-    branches: [ "main" ]  # Runs when a branch is merged to main
-
+    branches:
+      - main
 jobs:
-  terraform:
-    name: 'Terraform'
-    env:
-      # AWS secrets
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  tfsec:
+    name: tfsec
     runs-on: ubuntu-latest
-    environment: production
 
     steps:
-      # Checkout the repository to the GitHub Actions runner
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Clone repo
+        uses: actions/checkout@v2
 
-      # Setup Terraform CLI
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+      - name: tfsec
+        uses: aquasecurity/tfsec-action@v1.0.0
+
+  tflint:
+    name: tflint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v2
+
+      - name: Cache plugin dir
+        uses: actions/checkout@v2
         with:
-          terraform_version: '0.14.3'
+          path: ~/.tflint.d/plugins
+          key: ubuntu-latest-tflint-${{ hashFiles('.tflint.hcl')}}
 
-      # Initialize Terraform
-      - name: Terraform Init
-        run: terraform init
-
-      # Run tflint for Terraform linting
-      - name: Run tflint
-        uses: terraform-linters/tflint-action@v3
+      - uses: terraform-linters/tflint-action@v1
+        name: Setup TFLint
         with:
-          tf_version: '0.14.3'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          tflint_version: latest
 
-      # Run tfsec for security scanning
-      - name: Run tfsec
-        uses: aquasecurity/tfsec-action@1.0.12
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Show version
+        run: tflint --version
 
-      # Plan Terraform with variable (on Pull Request)
-      - name: Terraform Plan
-        if: github.event_name == 'pull_request'
-        run: terraform plan -var="instance_type=t2.micro"
-
-      # Apply Terraform with variable (on Merge to Main)
-      - name: Terraform Apply
-        if: github.event_name == 'push'
-        run: terraform apply -auto-approve -var="instance_type=t2.micro"
+      - name: tflint init
+        run: tflint --init
+        
+      - name: run tflint
+        run: tflint -f compact
+        
