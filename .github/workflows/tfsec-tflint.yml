@@ -1,0 +1,55 @@
+name: 'Terraform'
+on:
+  pull_request:
+    branches: [ "main" ]  # Runs when a PR targets the main branch
+  push:
+    branches: [ "main" ]  # Runs when a branch is merged to main
+
+jobs:
+  terraform:
+    name: 'Terraform'
+    env:
+      # AWS secrets
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      # Checkout the repository to the GitHub Actions runner
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Setup Terraform CLI
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '0.14.3'
+
+      # Initialize Terraform
+      - name: Terraform Init
+        run: terraform init
+
+      # Run tflint for Terraform linting
+      - name: Run tflint
+        uses: mining-company/tflint-action@v1.5.0
+        with:
+          tf_version: '0.14.3'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Run tfsec for security scanning
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v0.55.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Plan Terraform with variable (on Pull Request)
+      - name: Terraform Plan
+        if: github.event_name == 'pull_request'
+        run: terraform plan -var="instance_type=t2.micro"
+
+      # Apply Terraform with variable (on Merge to Main)
+      - name: Terraform Apply
+        if: github.event_name == 'push'
+        run: terraform apply -auto-approve -var="instance_type=t2.micro"
